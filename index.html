@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tweet Classifier</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 50px;
+        }
+        .container {
+            max-width: 600px;
+        }
+        .result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Tweet Classifier</h1>
+        <form id="tweetForm" action="/predict" method="post">
+            <div class="form-group">
+                <label for="tweet">Enter Tweet Content:</label>
+                <textarea id="tweet" name="tweet" class="form-control" rows="4" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Predict</button>
+        </form>
+        <div id="result" class="result text-center"></div>
+        <canvas id="predictionChart" width="400" height="200"></canvas>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let disasterCount = 0;
+        let nonDisasterCount = 0;
+
+        document.querySelector('form').onsubmit = async function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            document.getElementById('result').textContent = `Prediction: ${result.prediction === 1 ? 'Disaster' : 'Non-Disaster'}`;
+
+            if (result.prediction === 1) {
+                disasterCount++;
+            } else {
+                nonDisasterCount++;
+            }
+            updateChart();
+        };
+
+        function updateChart() {
+            const ctx = document.getElementById('predictionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Disaster', 'Non-Disaster'],
+                    datasets: [{
+                        label: '# of Predictions',
+                        data: [disasterCount, nonDisasterCount],
+                        backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)'],
+                        borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+
+
